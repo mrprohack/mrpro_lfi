@@ -1,0 +1,30 @@
+#!/bin/bash
+
+while getopts f:w: flag; do
+    case "${flag}" in
+        f) filename=${OPTARG} ;;
+        w) wordlist=${OPTARG} ;;
+    esac
+done
+
+if [[ $# == 0 || $filename == "" ]]; then
+    echo "Usage: mrpro_lfi -f {file_name} [-w {wordlist}]"
+    exit 1
+fi
+
+if [[ ! -f "$filename" ]]; then
+    echo "$filename does not exist."
+    exit 1
+fi
+
+if ! command -v ffuf &> /dev/null; then
+    echo "ffuf is not installed. Please install it before running this script."
+    exit 1
+fi
+
+while read url; do
+    url=$(echo "$url" | sed 's/FUZZ/{}/g')
+    ffuf -u "$url" -mr "root:x" ${wordlist:+-w "$wordlist"} | grep -q "200" && echo "hackd $url" >> hackd_lfi
+done < <(cat "$filename" | grep -E "^https?://.+FUZZ" | cut -d' ' -f1)
+
+echo "Finished scanning. Check hackd_lfi for results."
